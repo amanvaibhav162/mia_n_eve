@@ -96,7 +96,6 @@
         previousState = $currentState;
     }
 
-    // ── GLSL Shaders ──────────────────────────────────────────────────
     const vertexShader = /* glsl */ `
         attribute float aSize;
         attribute float aPhase;
@@ -280,7 +279,7 @@
         tiltedRing.rotation.z = 0.5;
         scene.add(tiltedRing);
 
-        polarRing = new THREE.Mesh(ringGeo(62, 0.05), ringMat(0x4ae5ff, 0.2));
+        polarRing = new THREE.Mesh(ringGeo(62, 0.05), ringMat(0x4ae5ff, 0.4));
         polarRing.position.y = 5;
         polarRing.rotation.x = Math.PI / 2;
         scene.add(polarRing);
@@ -317,8 +316,6 @@
         });
 
         container.appendChild(renderer.domElement);
-
-        // ── Particle geometry ─────────────────────────────────────────
         const particleCount = 300000;
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
@@ -336,7 +333,6 @@
             positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
             positions[i * 3 + 2] = r * Math.cos(phi);
 
-            // Per-particle variation
             sizes[i] = 0.5 + Math.random() * 2.5; // 0.5 – 3.0
             phases[i] = Math.random() * Math.PI * 2; // desync breathing
             opacities[i] = 0.4 + Math.random() * 0.6; // 0.4 – 1.0
@@ -352,8 +348,6 @@
             "aOpacity",
             new THREE.BufferAttribute(opacities, 1),
         );
-
-        // ── Custom shader material ────────────────────────────────────
         shaderMaterial = new THREE.ShaderMaterial({
             vertexShader,
             fragmentShader,
@@ -383,12 +377,9 @@
         animationId = requestAnimationFrame(animate);
 
         const currentTime = performance.now();
-        // Normalize delta time to 60fps (~16.66ms per frame)
-        // This ensures the orb rotates at the exact same speed even if the framerate lags
         const dt = (currentTime - lastTime) / 16.666;
         lastTime = currentTime;
 
-        // Smooth lerped transitions (also scaled by dt for smooth state changes)
         currentColor.lerp(targetColor, 0.15 * dt);
         currentSpeed += (targetSpeed - currentSpeed) * 0.15 * dt;
         currentScale += (targetScale - currentScale) * 0.2 * dt;
@@ -402,18 +393,15 @@
 
         particleSystem.scale.set(scaleMod, scaleMod, scaleMod);
 
-        // Rings breathe with the orb — same scale so they stay connected
         if (equatorialRing)
             equatorialRing.scale.set(scaleMod, scaleMod, scaleMod);
         if (tiltedRing) tiltedRing.scale.set(scaleMod, scaleMod, scaleMod);
         if (polarRing) polarRing.scale.set(scaleMod, scaleMod, scaleMod);
 
-        // Drive the shader
         shaderMaterial.uniforms.uTime.value = Date.now() * 0.001;
         shaderMaterial.uniforms.uColor.value.copy(currentColor);
         shaderMaterial.uniforms.uBreathIntensity.value = currentBreathIntensity;
 
-        // Rings track the orb color with brightness layers for depth
         if (equatorialRing)
             (equatorialRing.material as THREE.MeshBasicMaterial).color.copy(
                 currentColor,
@@ -431,11 +419,9 @@
                 currentColor,
             );
 
-        // Apply frame-rate independent rotation
         particleSystem.rotation.y += currentSpeed * dt;
         particleSystem.rotation.x += currentSpeed * 0.5 * dt;
 
-        // ── Orbital ring animation ────────────────────────────────────
         if (equatorialRing) equatorialRing.rotation.z += 0.003 * dt;
         if (tiltedRing) {
             tiltedRing.rotation.y += 0.005 * dt;
@@ -443,7 +429,6 @@
         }
         if (polarRing) polarRing.rotation.y -= 0.004 * dt;
 
-        // ── Radar pulse animation ─────────────────────────────────────
         if (pulseActive && pulseRing) {
             pulseTimer += 0.025 * dt;
             const s = 1 + pulseTimer * 5;
@@ -457,7 +442,6 @@
             }
         }
 
-        // ── Grid floor subtle animation ───────────────────────────────
         if (gridFloor) {
             gridFloor.position.z = Math.sin(Date.now() * 0.00008) * 1.5;
         }
