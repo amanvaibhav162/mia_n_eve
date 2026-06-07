@@ -49,3 +49,4 @@ ui/src-tauri/gen/
 
 # SvelteKit
 .svelte-kit/
+ui/src-tauri/Cargo.lock
